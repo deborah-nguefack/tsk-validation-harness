@@ -6,15 +6,18 @@ import sys
 import os
 
 def extract_hashes(image_path, output_csv):
-    OFFSET = 63 * 512
-    
     img = pytsk3.Img_Info(image_path)
-    fs = pytsk3.FS_Info(img, offset=OFFSET)
+    
+    # Try with offset (M57), then without (test image)
+    try:
+        fs = pytsk3.FS_Info(img, offset=63*512)
+    except:
+        fs = pytsk3.FS_Info(img)
     
     results = []
     
     def walk_directory(dir_path):
-        """Recursively walk through directories"""
+        """Recursively walk through all directories"""
         try:
             directory = fs.open_dir(path=dir_path)
             for file in directory:
@@ -35,10 +38,6 @@ def extract_hashes(image_path, output_csv):
                         filename = file.info.name.name.decode('utf-8')
                         full_path = f"{dir_path}/{filename}"
                         results.append({'filename': full_path, 'sha256': sha256_hash})
-                        
-                        # Show progress
-                        if len(results) % 100 == 0:
-                            print(f"Processed {len(results)} files...")
                     except:
                         pass
         except:
@@ -53,7 +52,7 @@ def extract_hashes(image_path, output_csv):
         writer.writeheader()
         writer.writerows(results)
     
-    print(f"\n✅ Extracted {len(results)} files to {output_csv}")
+    print(f"✅ Extracted {len(results)} files to {output_csv}")
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
