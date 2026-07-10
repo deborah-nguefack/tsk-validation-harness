@@ -1,6 +1,6 @@
 # TSK Validation Harness
 
-A Python-based validation tool for The Sleuth Kit (TSK) that helps small law enforcement agencies demonstrate tool reliability for evidence admissibility in Canadian courts.
+This is a Python-based validation tool for The Sleuth Kit (TSK) that helps small law enforcement agencies demonstrate tool reliability for evidence admissibility in Canadian courts.
 
 ## Overview
 
