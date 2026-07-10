@@ -4,11 +4,16 @@ TSK Validation Harness - Main Entry Point
 Runs the complete validation pipeline: extract → compare → report
 """
 
-import subprocess
 import sys
 import os
 import json
+import csv
 from datetime import datetime
+
+# Import your modules
+from hash_extractor import TSKHashExtractor
+from comparator import HashComparator
+from court_reporter import CourtReporter
 
 
 class TSKValidator:
@@ -22,7 +27,6 @@ class TSKValidator:
     def __init__(self, image_path="data/test_image.dd", ground_truth="data/ground_truth.csv"):
         self.image_path = image_path
         self.ground_truth = ground_truth
-        self.results = {}
         self.start_time = None
         self.end_time = None
     
@@ -33,20 +37,18 @@ class TSKValidator:
         print("="*60)
         
         try:
-            # Import the hash extractor
-            from hash_extractor import TSKHashExtractor
-            
-            # Run extraction
             extractor = TSKHashExtractor(self.image_path)
-            hashes = extractor.extract_all_hashes()
-            extractor.save_hashes("outputs/tsk_hashes.csv")
+            extractor.extract_all_hashes()
+            extractor.save_hashes_to_csv("outputs/tsk_hashes.csv")
             
-            print(f"✅ Extracted {len(hashes)} file hashes")
+            print(f"✅ Extracted {len(extractor.hashes)} file hashes")
             print(f"   Saved to: outputs/tsk_hashes.csv")
             return True
             
         except Exception as e:
             print(f"❌ Error during hash extraction: {e}")
+            import traceback
+            traceback.print_exc()
             return False
     
     def run_comparator(self):
@@ -56,14 +58,13 @@ class TSKValidator:
         print("="*60)
         
         try:
-            from comparator import HashComparator
-            import json
+            # Load extracted hashes from CSV
+            extracted = {}
+            with open("outputs/tsk_hashes.csv", 'r') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    extracted[row['filename']] = row['hash']
             
-            # Load extracted hashes
-            with open("outputs/tsk_hashes.json", 'r') as f:
-                extracted = json.load(f)
-            
-            # Compare against ground truth
             comparator = HashComparator(self.ground_truth)
             results = comparator.compare(extracted)
             accuracy = comparator.get_accuracy(results)
@@ -80,6 +81,8 @@ class TSKValidator:
             
         except Exception as e:
             print(f"❌ Error during comparison: {e}")
+            import traceback
+            traceback.print_exc()
             return False
     
     def run_court_reporter(self):
@@ -89,22 +92,15 @@ class TSKValidator:
         print("="*60)
         
         try:
-            from court_reporter import CourtReporter
-            import json
-            
-            # Load comparison results
             with open("outputs/comparison_results.json", 'r') as f:
                 results = json.load(f)
             
-            # Calculate accuracy
             total = len(results['matches']) + len(results['mismatches'])
             accuracy = (len(results['matches']) / total * 100) if total > 0 else 0
             
-            # Generate report
             reporter = CourtReporter(results, accuracy)
             reporter.save_report("outputs/court_report.json")
             
-            # Display summary
             with open("outputs/court_report.json", 'r') as f:
                 report = json.load(f)
             
@@ -114,11 +110,12 @@ class TSKValidator:
             print(f"   Total Files: {report['validation_summary']['total_files']}")
             print(f"   Accuracy: {report['validation_summary']['accuracy']}%")
             print(f"   Status: {report['validation_summary']['validation_status']}")
-            print(f"   Confidence: {report['court_summary']['confidence_level']}")
             return True
             
         except Exception as e:
             print(f"❌ Error generating report: {e}")
+            import traceback
+            traceback.print_exc()
             return False
     
     def run_full_validation(self):
@@ -132,7 +129,6 @@ class TSKValidator:
         
         self.start_time = datetime.now()
         
-        # Run all three steps
         success = True
         if not self.run_hash_extractor():
             success = False
@@ -150,7 +146,7 @@ class TSKValidator:
         print(f"Duration: {duration:.2f} seconds")
         print(f"Status: {'✅ PASSED' if success else '❌ FAILED'}")
         print("\nOutputs saved to: outputs/")
-        print("  - tsk_hashes.json")
+        print("  - tsk_hashes.csv")
         print("  - comparison_results.json")
         print("  - court_report.json")
         print("\n📋 Court report ready for review: outputs/court_report.json")
@@ -160,18 +156,11 @@ class TSKValidator:
 
 
 def main():
-    """Command-line entry point with optional arguments"""
+    """Command-line entry point"""
     import argparse
     
     parser = argparse.ArgumentParser(
-        description="TSK Validation Harness - Validate TSK against NIST ground truth",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-  python src/validator.py                                    # Run with default test image
-  python src/validator.py --image my_image.dd                # Use custom image
-  python src/validator.py --ground-truth my_truth.csv        # Use custom ground truth
-        """
+        description="TSK Validation Harness - Validate TSK against NIST ground truth"
     )
     
     parser.add_argument(
@@ -184,18 +173,11 @@ Examples:
         default='data/ground_truth.csv',
         help='Path to ground truth CSV (default: data/ground_truth.csv)'
     )
-    parser.add_argument(
-        '--quick',
-        action='store_true',
-        help='Skip hash extraction if previous results exist'
-    )
     
     args = parser.parse_args()
     
-    # Create outputs directory if it doesn't exist
     os.makedirs('outputs', exist_ok=True)
     
-    # Run validation
     validator = TSKValidator(args.image, args.ground_truth)
     success = validator.run_full_validation()
     
