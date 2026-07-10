@@ -8,10 +8,11 @@ import sys
 import os
 import json
 import csv
+import subprocess
 from datetime import datetime
 
 # Import your modules
-from hash_extractor import TSKHashExtractor
+from hash_extractor import extract_hashes
 from comparator import HashComparator
 from court_reporter import CourtReporter
 
@@ -37,12 +38,8 @@ class TSKValidator:
         print("="*60)
         
         try:
-            extractor = TSKHashExtractor(self.image_path)
-            extractor.extract_all_hashes()
-            extractor.save_hashes_to_csv("outputs/tsk_hashes.csv")
-            
-            print(f"✅ Extracted {len(extractor.hashes)} file hashes")
-            print(f"   Saved to: outputs/tsk_hashes.csv")
+            # Call the function from hash_extractor.py
+            extract_hashes(self.image_path, "outputs/tsk_hashes.csv")
             return True
             
         except Exception as e:
@@ -63,7 +60,7 @@ class TSKValidator:
             with open("outputs/tsk_hashes.csv", 'r') as f:
                 reader = csv.DictReader(f)
                 for row in reader:
-                    extracted[row['filename']] = row['hash']
+                    extracted[row['filename']] = row['sha256']
             
             comparator = HashComparator(self.ground_truth)
             results = comparator.compare(extracted)
