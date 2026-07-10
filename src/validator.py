@@ -7,14 +7,12 @@ Runs the complete validation pipeline: extract → compare → report
 import sys
 import os
 import json
-import csv
-import subprocess
 from datetime import datetime
 
-# Import your modules
+# Import your modules (all use functions, not classes)
 from hash_extractor import extract_hashes
-from comparator import HashComparator
-from court_reporter import CourtReporter
+from comparator import compare_hashes
+from court_reporter import generate_report
 
 
 class TSKValidator:
@@ -38,8 +36,8 @@ class TSKValidator:
         print("="*60)
         
         try:
-            # Call the function from hash_extractor.py
             extract_hashes(self.image_path, "outputs/tsk_hashes.csv")
+            print(f"✅ Extraction complete")
             return True
             
         except Exception as e:
@@ -55,25 +53,7 @@ class TSKValidator:
         print("="*60)
         
         try:
-            # Load extracted hashes from CSV
-            extracted = {}
-            with open("outputs/tsk_hashes.csv", 'r') as f:
-                reader = csv.DictReader(f)
-                for row in reader:
-                    extracted[row['filename']] = row['sha256']
-            
-            comparator = HashComparator(self.ground_truth)
-            results = comparator.compare(extracted)
-            accuracy = comparator.get_accuracy(results)
-            
-            # Save results
-            with open("outputs/comparison_results.json", 'w') as f:
-                json.dump(results, f, indent=2)
-            
-            print(f"✅ Matches: {len(results['matches'])}")
-            print(f"❌ Mismatches: {len(results['mismatches'])}")
-            print(f"📊 Accuracy: {accuracy:.2f}%")
-            print(f"   Saved to: outputs/comparison_results.json")
+            compare_hashes("outputs/tsk_hashes.csv", self.ground_truth, "outputs/comparison_results.csv")
             return True
             
         except Exception as e:
@@ -89,24 +69,7 @@ class TSKValidator:
         print("="*60)
         
         try:
-            with open("outputs/comparison_results.json", 'r') as f:
-                results = json.load(f)
-            
-            total = len(results['matches']) + len(results['mismatches'])
-            accuracy = (len(results['matches']) / total * 100) if total > 0 else 0
-            
-            reporter = CourtReporter(results, accuracy)
-            reporter.save_report("outputs/court_report.json")
-            
-            with open("outputs/court_report.json", 'r') as f:
-                report = json.load(f)
-            
-            print(f"✅ Court report generated successfully")
-            print(f"   Saved to: outputs/court_report.json")
-            print("\n📋 Report Summary:")
-            print(f"   Total Files: {report['validation_summary']['total_files']}")
-            print(f"   Accuracy: {report['validation_summary']['accuracy']}%")
-            print(f"   Status: {report['validation_summary']['validation_status']}")
+            generate_report("outputs/comparison_results.csv", "outputs/court_report.json")
             return True
             
         except Exception as e:
@@ -144,7 +107,7 @@ class TSKValidator:
         print(f"Status: {'✅ PASSED' if success else '❌ FAILED'}")
         print("\nOutputs saved to: outputs/")
         print("  - tsk_hashes.csv")
-        print("  - comparison_results.json")
+        print("  - comparison_results.csv")
         print("  - court_report.json")
         print("\n📋 Court report ready for review: outputs/court_report.json")
         print("="*60)
