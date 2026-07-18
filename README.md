@@ -89,7 +89,7 @@ python validator.py --image my-test.dd --ground-truth ground_truth.csv
 
 ```bash
 # Step 1: Extract hashes
-python hash_extractor.py test_image.dd outputs/tsk_hashes.csv
+python hash_extractor.py my-test.dd outputs/tsk_hashes.csv
 
 # Step 2: Compare against ground truth
 python comparator.py outputs/tsk_hashes.csv ground_truth.csv outputs/comparison_results.csv
