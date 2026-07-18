@@ -1,0 +1,16 @@
+# Large forensic images
+*.dd
+*.raw
+*.E01
+*.E02
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.swp
+.pytest_cache/
+
+# Outputs (optional)
+outputs/
+*.log
