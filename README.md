@@ -49,7 +49,7 @@ tsk-validation-harness/
 
 ### Step 1: Install TSK
 
-**Kali Linux**
+**Kali Linux:**
 ```bash
 sudo apt-get install sleuthkit
 ```
