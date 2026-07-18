@@ -82,7 +82,7 @@ pip install -r requirements.txt
 ### Option A: Using Validator (Recommended)
 
 ```bash
-python validator.py --image test_image.dd --ground-truth ground_truth.csv
+python validator.py --image my-test.dd --ground-truth ground_truth.csv
 ```
 
 ### Option B: Run Step by Step
@@ -117,6 +117,7 @@ python validator.py --image m57-jean.dd --ground-truth m57_ground_truth.csv --of
   "court_summary": {
     "statement": "TSK demonstrated 100.00% accuracy on 8 files.",
     "recommendation": "Tool is reliable for forensic use"
+  }
 }
 ```
 
