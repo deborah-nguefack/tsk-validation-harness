@@ -24,20 +24,20 @@ tsk-validation-harness/
 ├── README.md
 ├── LICENSE
 ├── requirements.txt
-├── src/
-│   ├── validator.py
-│   ├── hash_extractor.py
-│   ├── comparator.py
-│   └── court_reporter.py
-├── tests/
-│   └── test_hash_extractor.py
-├── data/
-│   ├── ground_truth.csv
-│   └── test_image.dd
-└── outputs/
-    ├── tsk_hashes.json
-    ├── comparison_results.json
-    └── court_report.json
+├── validator.py                 # Main validation tool
+├── hash_extractor.py            # Extracts SHA-256 hashes
+├── comparator.py                # Compares hashes vs ground truth
+├── court_reporter.py            # Generates JSON court report
+├── compare_m57.py               # M57-specific comparison script
+├── hash_extractor_m57_subset.py # M57 subset extraction
+├── ground_truth.csv             # Ground truth for test image
+├── ground_truth_correct.csv     # Corrected ground truth
+├── m57_ground_truth.csv         # Ground truth for M57-Jean
+├── my-test.dd                   # Test disk image
+├── tsk_hashes.txt               # Example output
+├── tsk_hashes_m57.txt           # M57 extraction output
+├── validation_report.json       # Example court report
+└── tests/                       # Automated tests
 ```
 
 ## Installation
@@ -48,6 +48,11 @@ tsk-validation-harness/
 - The Sleuth Kit (TSK) 4.12+
 
 ### Step 1: Install TSK
+
+**Kali Linux**
+```bash
+sudo apt-get install sleuthkit
+```
 
 **Ubuntu/Debian:**
 ```bash
@@ -74,34 +79,44 @@ pip install -r requirements.txt
 
 ## How to Run
 
-### Option A: One Command (Recommended)
+### Option A: Using Validator (Recommended)
 
 ```bash
-python src/validator.py
+python validator.py --image test_image.dd --ground-truth ground_truth.csv
 ```
 
 ### Option B: Run Step by Step
 
 ```bash
-python src/hash_extractor.py   # Step 1: Extract hashes
-python src/comparator.py       # Step 2: Compare against ground truth
-python src/court_reporter.py   # Step 3: Generate court report
+# Step 1: Extract hashes
+python hash_extractor.py test_image.dd outputs/tsk_hashes.csv
+
+# Step 2: Compare against ground truth
+python comparator.py outputs/tsk_hashes.csv ground_truth.csv outputs/comparison_results.csv
+
+# Step 3: Generate court report
+python court_reporter.py outputs/comparison_results.csv outputs/court_report.json
+```
+
+### Option C: Run on M57-Jean (with offset)
+
+```bash
+python validator.py --image m57-jean.dd --ground-truth m57_ground_truth.csv --offset 32256
 ```
 
 ## Expected Output
 
 ```json
 {
-  "validation_summary": {
-    "total_files": 500,
-    "matches": 498,
-    "mismatches": 2,
-    "accuracy": 99.6
+  "summary": {
+    "total_files_compared": 8,
+    "matches": 8,
+    "mismatches": 0,
+    "accuracy_percent": 100.0
   },
   "court_summary": {
-    "validation_result": "PASSED",
-    "confidence_level": "HIGH"
-  }
+    "statement": "TSK demonstrated 100.00% accuracy on 8 files.",
+    "recommendation": "Tool is reliable for forensic use"
 }
 ```
 
