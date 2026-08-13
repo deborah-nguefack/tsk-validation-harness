@@ -132,8 +132,6 @@ pytest tests/ -v
 MIT License
 
 ## Authors
-
-- Naomi Nguefack (1416225)
 - Deborah Essien (1408505)
 
 ## References
