@@ -133,8 +133,8 @@ MIT License
 
 ## Authors
 
-- Naomi Nguefack (1416225)
 - Deborah Essien (1408505)
+- Naomi Nguefack (1416225)
 
 ## References
 
